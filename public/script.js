@@ -28,7 +28,7 @@ function showToast(message) {
 let API_KEY;
 async function loadApiKey() {
   try {
-    const response = await fetch('http://localhost:3000/api/config');
+    const response = await fetch('/api/config'); // Changed from http://localhost:3000
     const config = await response.json();
     API_KEY = config.apiKey;
   } catch (error) {
@@ -267,7 +267,7 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
       bypassCache: 'true',
     });
     const response = await fetch(
-      `http://localhost:3000/api/fetchCoinData/${validId}?${queryParams}`,
+      `/api/fetchCoinData/${validId}?${queryParams}`, // Changed from http://localhost:3000
       {
         headers: { 'X-API-Key': API_KEY },
       }

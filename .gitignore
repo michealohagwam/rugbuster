@@ -18,3 +18,5 @@ public/script.min.js
 
 # Vercel build artifacts
 .vercel/
+# Local Netlify folder
+.netlify

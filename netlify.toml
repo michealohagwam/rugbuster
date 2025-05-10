@@ -1,0 +1,20 @@
+[build]
+  base = "."
+  publish = "public"
+  functions = "netlify/functions"
+  command = "npm run minify"
+
+[dev]
+  publish = "public"
+  port = 8888
+  autoLaunch = true
+
+[[redirects]]
+  from = "/api/config"
+  to = "/.netlify/functions/config"
+  status = 200
+
+[[redirects]]
+  from = "/api/fetchCoinData/:id"
+  to = "/.netlify/functions/fetchCoinData/:id"
+  status = 200
