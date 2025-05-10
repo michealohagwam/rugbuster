@@ -1,0 +1,336 @@
+:root {
+  --bg-gradient-start: #e3f2fd;
+  --bg-gradient-end: #bbdefb;
+  --text-color: #333;
+  --card-bg: #fff;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --header-color: #1a3c6d;
+  --muted-color: #6c757d;
+  --table-bg: #f8f9fa;
+  --table-border: #ddd;
+  --btn-primary-bg: #007bff;
+  --btn-primary-hover: #0056b3;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --success-color: #28a745;
+}
+
+[data-theme="dark"] {
+  --bg-gradient-start: #1a1a1a;
+  --bg-gradient-end: #2c2c2c;
+  --text-color: #e0e0e0;
+  --card-bg: #2c2c2c;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --header-color: #a8c0ff;
+  --muted-color: #a0a0a0;
+  --table-bg: #3a3a3a;
+  --table-border: #555;
+  --btn-primary-bg: #1e90ff;
+  --btn-primary-hover: #1c86ee;
+  --danger-color: #ff6b6b;
+  --warning-color: #ffd700;
+  --success-color: #32cd32;
+}
+
+body {
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+  font-family: 'Inter', sans-serif;
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 900px;
+  padding: 2rem 1rem;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--header-color);
+}
+
+.header p {
+  color: var(--muted-color);
+  font-size: 1.1rem;
+}
+
+.search-card,
+.results-card,
+.sponsored-card,
+.premium-section,
+.consulting-section,
+.product-section,
+.education-card,
+.tools-section {
+  background: var(--card-bg);
+  border-radius: 15px;
+  box-shadow: var(--card-shadow);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.search-card .input-group {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.search-card .form-control {
+  border: none;
+  padding: 0.75rem;
+  font-size: 1rem;
+  background: var(--card-bg);
+  color: var(--text-color);
+}
+
+.search-card .btn-primary {
+  background-color: var(--btn-primary-bg) !important;
+  border: none !important;
+  padding: 0.75rem 1.5rem;
+  transition: background-color 0.3s;
+}
+
+.search-card .btn-primary:hover {
+  background-color: var(--btn-primary-hover) !important;
+}
+
+.search-card .spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.spinner-circle {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--table-bg);
+  border-top: 4px solid var(--btn-primary-bg);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.results-card h2,
+.sponsored-card h3,
+.premium-section h3,
+.consulting-section h3,
+.product-section h3,
+.education-card h3,
+.tools-section h3 {
+  font-size: 1.8rem;
+  color: var(--header-color);
+}
+
+.results-card .table {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card-bg);
+}
+
+.results-card .table th,
+.results-card .table td {
+  vertical-align: middle;
+  text-align: center;
+  padding: 0.75rem;
+  border: 1px solid var(--table-border);
+  color: var(--text-color);
+}
+
+.results-card .table th {
+  background-color: var(--table-bg);
+  font-weight: 600;
+}
+
+.results-card .table .section-header {
+  background-color: var(--table-bg);
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+}
+
+.results-card .table .verdict-low {
+  color: var(--success-color);
+}
+
+.results-card .table .verdict-high {
+  color: var(--danger-color);
+}
+
+.results-card .download-btn {
+  background-color: var(--btn-primary-bg);
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border-radius: 10px;
+  transition: background-color 0.3s;
+  margin-top: 1rem;
+  display: inline-block;
+  color: #fff;
+}
+
+.results-card .download-btn:hover {
+  background-color: var(--btn-primary-hover);
+}
+
+.results-card h3 {
+  margin-top: 1.5rem;
+}
+
+.results-card ul.list-unstyled li {
+  margin-bottom: 0.5rem;
+}
+
+.text-danger {
+  color: var(--danger-color);
+}
+
+.text-warning {
+  color: var(--warning-color);
+}
+
+.text-success {
+  color: var(--success-color);
+}
+
+.donate-section,
+.premium-section,
+.consulting-section,
+.product-section,
+.education-card,
+.tools-section {
+  text-align: center;
+}
+
+.donate-section .btn,
+.premium-section .btn,
+.consulting-section .btn,
+.product-section .btn,
+.tools-section .btn {
+  margin: 0.5rem;
+  font-size: 1rem;
+}
+
+.ad-section {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.donation-bar {
+  background: var(--table-bg);
+  border-radius: 10px;
+  padding: 0.5rem;
+  margin: 1rem 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 1px solid var(--table-border);
+}
+
+.donation-bar span {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  animation: marquee 20s linear infinite;
+  color: var(--text-color);
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Ensure PDF content is styled */
+.pdf-content {
+  background: var(--card-bg);
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+  padding: 20px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem 0.5rem;
+  }
+  .header h1 {
+    font-size: 1.8rem;
+  }
+  .header p {
+    font-size: 0.9rem;
+  }
+  .search-card,
+  .results-card,
+  .sponsored-card,
+  .premium-section,
+  .consulting-section,
+  .product-section,
+  .education-card,
+  .tools-section {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .search-card .form-control {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+  }
+  .search-card .btn-primary {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+  .spinner-circle {
+    width: 30px;
+    height: 30px;
+    border-width: 3px;
+  }
+  .results-card h2,
+  .sponsored-card h3,
+  .premium-section h3,
+  .consulting-section h3,
+  .product-section h3,
+  .education-card h3,
+  .tools-section h3 {
+    font-size: 1.4rem;
+  }
+  .results-card .table {
+    font-size: 0.8rem;
+  }
+  .results-card .table th,
+  .results-card .table td {
+    padding: 0.5rem;
+  }
+  .results-card .table .section-header {
+    font-size: 0.9rem;
+    padding: 0.3rem 0.5rem;
+  }
+  .results-card .download-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+  .donate-section .btn,
+  .premium-section .btn,
+  .consulting-section .btn,
+  .product-section .btn,
+  .tools-section .btn {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+  .donation-bar {
+    font-size: 0.8rem;
+  }
+  .donation-bar span {
+    padding: 0.3rem 0.5rem;
+  }
+}

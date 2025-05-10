@@ -1,0 +1,29 @@
+{
+  "name": "rugbuster",
+  "version": "1.0.0",
+  "description": "A tool to research meme coins and detect potential rug pulls.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "minify": "uglifyjs public/script.js -o public/script.min.js"
+  },
+  "keywords": [
+    "crypto",
+    "meme-coin",
+    "rug-pull",
+    "scam-detection"
+  ],
+  "author": "Micheal Ohagwam",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.3.1",
+    "html2pdf.js": "^0.10.3"
+  },
+  "devDependencies": {
+    "uglify-js": "^3.18.0"
+  }
+}
