@@ -28,7 +28,7 @@ function showToast(message) {
 let API_KEY;
 async function loadApiKey() {
   try {
-    const response = await fetch('/api/config'); // Changed from http://localhost:3000
+    const response = await fetch('/api/config');
     const config = await response.json();
     API_KEY = config.apiKey;
   } catch (error) {
@@ -46,23 +46,25 @@ function cleanCoinId(input) {
 
 // Auto-suggest coin names
 const coinSearch = document.getElementById('coinSearch');
-coinSearch.addEventListener('input', async () => {
-  const query = coinSearch.value.trim().toLowerCase();
-  if (query.length < 3) return;
+if (coinSearch) {
+  coinSearch.addEventListener('input', async () => {
+    const query = coinSearch.value.trim().toLowerCase();
+    if (query.length < 3) return;
 
-  try {
-    const response = await fetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(query)}`);
-    const data = response.ok ? await response.json() : { coins: [] };
-    const suggestions = data.coins.slice(0, 5).map(coin => `${coin.name} (${coin.symbol.toUpperCase()}) - ${coin.id}`);
-    const datalist = document.getElementById('coinSuggestions') || document.createElement('datalist');
-    datalist.id = 'coinSuggestions';
-    datalist.innerHTML = suggestions.map(s => `<option value="${s}">`).join('');
-    if (!datalist.parentElement) document.body.appendChild(datalist);
-    coinSearch.setAttribute('list', 'coinSuggestions');
-  } catch (error) {
-    console.error('Auto-suggest error:', error);
-  }
-});
+    try {
+      const response = await fetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(query)}`);
+      const data = response.ok ? await response.json() : { coins: [] };
+      const suggestions = data.coins.slice(0, 5).map(coin => `${coin.name} (${coin.symbol.toUpperCase()}) - ${coin.id}`);
+      const datalist = document.getElementById('coinSuggestions') || document.createElement('datalist');
+      datalist.id = 'coinSuggestions';
+      datalist.innerHTML = suggestions.map(s => `<option value="${s}">`).join('');
+      if (!datalist.parentElement) document.body.appendChild(datalist);
+      coinSearch.setAttribute('list', 'coinSuggestions');
+    } catch (error) {
+      console.error('Auto-suggest error:', error);
+    }
+  });
+}
 
 // Theme toggle
 const themeToggle = document.getElementById('themeToggle');
@@ -238,74 +240,76 @@ function downloadPDF(coinName, timestamp) {
 window.addEventListener('load', loadApiKey);
 
 // Search button handler
-document.getElementById('searchBtn').addEventListener('click', async () => {
-  const searchTerm = document.getElementById('coinSearch').value.trim().toLowerCase();
-  const auditLink = document.getElementById('auditLink').value.trim();
-  const coinDetails = document.getElementById('coinDetails');
-  const searchBtn = document.getElementById('searchBtn');
-  const spinner = document.getElementById('loadingSpinner');
+const searchBtn = document.getElementById('searchBtn');
+if (searchBtn) {
+  searchBtn.addEventListener('click', async () => {
+    const searchTerm = document.getElementById('coinSearch').value.trim().toLowerCase();
+    const auditLink = document.getElementById('auditLink').value.trim();
+    const coinDetails = document.getElementById('coinDetails');
+    const spinner = document.getElementById('loadingSpinner');
 
-  if (!searchTerm) {
-    showToast('Please enter a coin name or ID.');
-    return;
-  }
+    if (!searchTerm) {
+      showToast('Please enter a coin name or ID.');
+      return;
+    }
 
-  if (!API_KEY) {
-    showToast('Configuration not loaded. Please try again.');
-    return;
-  }
+    if (!API_KEY) {
+      showToast('Configuration not loaded. Please try again.');
+      return;
+    }
 
-  spinner.style.display = 'flex';
-  searchBtn.disabled = true;
-  searchBtn.classList.add('disabled');
-  coinDetails.innerHTML = '';
+    spinner.style.display = 'flex';
+    searchBtn.disabled = true;
+    searchBtn.classList.add('disabled');
+    coinDetails.innerHTML = '';
 
-  try {
-    const validId = cleanCoinId(searchTerm);
-    const queryParams = new URLSearchParams({
-      auditLink: encodeURIComponent(auditLink),
-      bypassCache: 'true',
-    });
-    const response = await fetch(
-      `/api/fetchCoinData/${validId}?${queryParams}`, // Changed from http://localhost:3000
-      {
-        headers: { 'X-API-Key': API_KEY },
+    try {
+      const validId = cleanCoinId(searchTerm);
+      const queryParams = new URLSearchParams({
+        auditLink: encodeURIComponent(auditLink),
+        bypassCache: 'true',
+      });
+      const response = await fetch(
+        `/api/fetchCoinData/${validId}?${queryParams}`,
+        {
+          headers: { 'X-API-Key': API_KEY },
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
       }
-    );
-    if (!response.ok) {
-      throw new Error(`Server error: ${response.status}`);
-    }
-    const result = await response.json();
-    if (result.error) {
-      throw new Error(result.details || 'Failed to fetch coin data');
-    }
-    coinDetails.innerHTML = result.html;
+      const result = await response.json();
+      if (result.error) {
+        throw new Error(result.details || 'Failed to fetch coin data');
+      }
+      coinDetails.innerHTML = result.html;
 
-    // Add download button
-    console.log('Appending download button'); // Debug log
-    const downloadBtn = document.createElement('button');
-    downloadBtn.className = 'download-btn btn';
-    downloadBtn.innerHTML = '<i class="bi bi-download me-2"></i>Download PDF';
-    downloadBtn.addEventListener('click', () => {
-      downloadPDF(result.data?.name || validId, result.searchTime);
-    });
-    coinDetails.appendChild(downloadBtn);
-  } catch (error) {
-    console.error(`Coin fetch error: ${error.message}`);
-    let errorMessage = error.message;
-    if (errorMessage.includes('No data found')) {
-      errorMessage = `No data found for "${searchTerm}". Try a different coin name or ID (e.g., "baby-doge-coin" for BabyDoge) or check API availability.`;
-    } else if (errorMessage.includes('Server error: 500')) {
-      errorMessage = `Server error while fetching data for "${searchTerm}". Please try again later or contact support.`;
+      // Add download button
+      console.log('Appending download button');
+      const downloadBtn = document.createElement('button');
+      downloadBtn.className = 'download-btn btn';
+      downloadBtn.innerHTML = '<i class="bi bi-download me-2"></i>Download PDF';
+      downloadBtn.addEventListener('click', () => {
+        downloadPDF(result.data?.name || validId, result.searchTime);
+      });
+      coinDetails.appendChild(downloadBtn);
+    } catch (error) {
+      console.error(`Coin fetch error: ${error.message}`);
+      let errorMessage = error.message;
+      if (errorMessage.includes('No data found')) {
+        errorMessage = `No data found for "${searchTerm}". Try a different coin name or ID (e.g., "baby-doge-coin" for BabyDoge) or check API availability.`;
+      } else if (errorMessage.includes('Server error: 500')) {
+        errorMessage = `Server error while fetching data for "${searchTerm}". Please try again later or contact support.`;
+      }
+      coinDetails.innerHTML = `<p class="text-danger"><i class="bi bi-exclamation-circle me-2"></i>${errorMessage}</p>`;
+      showToast(errorMessage);
+    } finally {
+      spinner.style.display = 'none';
+      searchBtn.disabled = false;
+      searchBtn.classList.remove('disabled');
     }
-    coinDetails.innerHTML = `<p class="text-danger"><i class="bi bi-exclamation-circle me-2"></i>${errorMessage}</p>`;
-    showToast(errorMessage);
-  } finally {
-    spinner.style.display = 'none';
-    searchBtn.disabled = false;
-    searchBtn.classList.remove('disabled');
-  }
-});
+  });
+}
 
 // Initialize tooltips
 const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
