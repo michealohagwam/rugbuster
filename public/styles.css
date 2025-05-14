@@ -62,9 +62,31 @@ body {
   font-size: 1.1rem;
 }
 
+.navbar {
+  background-color: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+.navbar-brand {
+  font-weight: bold;
+  color: var(--header-color);
+}
+
+.navbar-light .navbar-nav .nav-link {
+  color: var(--text-color);
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.navbar-light .navbar-nav .nav-link:hover,
+.navbar-light .navbar-nav .nav-link.active {
+  color: var(--btn-primary-bg);
+}
+
 .search-card,
 .results-card,
 .sponsored-card,
+.testimonials-card,
 .premium-section,
 .consulting-section,
 .product-section,
@@ -75,6 +97,43 @@ body {
   box-shadow: var(--card-shadow);
   padding: 1.5rem;
   margin-bottom: 2rem;
+}
+
+.testimonials-card h3 {
+  font-size: 1.8rem;
+  color: var(--header-color);
+  margin-bottom: 1.5rem;
+}
+
+.testimonials-card .card {
+  background: var(--card-bg);
+  border: 1px solid var(--table-border);
+  border-radius: 10px;
+  transition: transform 0.3s;
+}
+
+.testimonials-card .card:hover {
+  transform: translateY(-5px);
+}
+
+.testimonials-card .card-body {
+  padding: 1rem;
+}
+
+.testimonials-card .card-text {
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.testimonials-card .text-muted {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--muted-color);
+}
+
+[data-theme="dark"] .testimonials-card .card .card-body .text-muted {
+  color: var(--text-color) !important;
+  opacity: 1;
 }
 
 .search-card .input-group {
@@ -88,6 +147,16 @@ body {
   font-size: 1rem;
   background: var(--card-bg);
   color: var(--text-color);
+}
+
+.search-card .form-control::placeholder {
+  color: var(--muted-color);
+  opacity: 0.8;
+}
+
+[data-theme="dark"] .search-card .form-control::placeholder {
+  color: var(--muted-color);
+  opacity: 0.9;
 }
 
 .search-card .btn-primary {
@@ -124,6 +193,7 @@ body {
 
 .results-card h2,
 .sponsored-card h3,
+.testimonials-card h3,
 .premium-section h3,
 .consulting-section h3,
 .product-section h3,
@@ -252,6 +322,19 @@ body {
   100% { transform: translateX(-100%); }
 }
 
+footer {
+  background-color: var(--card-bg);
+}
+
+footer p {
+  color: var(--muted-color);
+}
+
+[data-theme="dark"] footer p {
+  color: var(--muted-color);
+  opacity: 0.9;
+}
+
 /* Ensure PDF content is styled */
 .pdf-content {
   background: var(--card-bg);
@@ -271,9 +354,13 @@ body {
   .header p {
     font-size: 0.9rem;
   }
+  .navbar-nav {
+    text-align: center;
+  }
   .search-card,
   .results-card,
   .sponsored-card,
+  .testimonials-card,
   .premium-section,
   .consulting-section,
   .product-section,
@@ -297,6 +384,7 @@ body {
   }
   .results-card h2,
   .sponsored-card h3,
+  .testimonials-card h3,
   .premium-section h3,
   .consulting-section h3,
   .product-section h3,
@@ -332,5 +420,23 @@ body {
   }
   .donation-bar span {
     padding: 0.3rem 0.5rem;
+  }
+  #themeToggle {
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1050;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background-color: var(--btn-primary-bg);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #themeToggle i {
+    font-size: 1rem;
   }
 }
