@@ -25,16 +25,19 @@ function showToast(message) {
 }
 
 // Fetch the API key from the server
-let API_KEY;
+let API_KEY = 'rugbuster-secret-123'; // Default fallback
 async function loadApiKey() {
   try {
     const response = await fetch('/api/config');
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
     const config = await response.json();
     API_KEY = config.apiKey;
+    console.log('API key loaded successfully');
   } catch (error) {
     console.error('Failed to load API key:', error);
-    showToast('Failed to load configuration. Using fallback key.');
-    API_KEY = 'rugbuster-secret-123';
+    showToast('Failed to load API key. Using fallback key.');
   }
 }
 
@@ -69,11 +72,24 @@ if (coinSearch) {
 // Theme toggle
 const themeToggle = document.getElementById('themeToggle');
 if (themeToggle) {
+  console.log('Theme toggle initialized');
   const themeIcon = themeToggle.querySelector('i');
   const setTheme = (theme) => {
+    console.log('Setting theme:', theme);
     document.documentElement.setAttribute('data-theme', theme);
-    themeIcon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
+    if (themeIcon) {
+      themeIcon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
+    }
     localStorage.setItem('theme', theme);
+    // Explicitly apply styles to ensure visibility
+    document.body.style.backgroundColor = theme === 'dark' ? '#343a40' : '#fff';
+    document.body.style.color = theme === 'dark' ? '#fff' : '#000';
+    // Apply to blog-specific elements
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+      card.style.backgroundColor = theme === 'dark' ? '#495057' : '#fff';
+      card.style.color = theme === 'dark' ? '#fff' : '#000';
+    });
   };
   const savedTheme = localStorage.getItem('theme') || 'light';
   setTheme(savedTheme);
@@ -96,21 +112,16 @@ function downloadPDF(coinName, timestamp) {
   const timestampStr = timestamp.replace(/[:\s]/g, '-').replace(' UTC', '');
   const filename = `RugBuster_${safeCoinName}_${timestampStr}.pdf`;
 
-  // Delay to ensure DOM is fully rendered
   setTimeout(() => {
-    // Clone the element to avoid modifying the original
     const clone = element.cloneNode(true);
     clone.classList.add('pdf-content');
-
-    // Force light theme for PDF rendering
     clone.setAttribute('data-theme', 'light');
     clone.style.backgroundColor = '#fff';
     clone.style.color = '#000';
-    clone.style.width = '210mm'; // A4 width
+    clone.style.width = '210mm';
     clone.style.padding = '10mm';
     clone.style.boxSizing = 'border-box';
 
-    // Update text content for Liquidity, Rug Pull Risks, and Verdict
     const liquidityRows = clone.querySelectorAll('table tbody tr');
     liquidityRows.forEach(row => {
       const cells = row.querySelectorAll('td');
@@ -135,7 +146,6 @@ function downloadPDF(coinName, timestamp) {
       }
     });
 
-    // Add footer
     const footer = document.createElement('div');
     footer.style.position = 'absolute';
     footer.style.bottom = '10mm';
@@ -146,13 +156,11 @@ function downloadPDF(coinName, timestamp) {
     footer.innerText = 'Powered by RugBuster';
     clone.appendChild(footer);
 
-    // Remove the download button from the PDF
     const buttons = clone.getElementsByClassName('download-btn');
     while (buttons.length > 0) {
       buttons[0].remove();
     }
 
-    // Ensure all tables have proper Bootstrap styling
     const tables = clone.querySelectorAll('table');
     tables.forEach(table => {
       table.classList.add('table', 'table-bordered', 'table-striped');
@@ -160,7 +168,6 @@ function downloadPDF(coinName, timestamp) {
       table.style.borderCollapse = 'collapse';
     });
 
-    // Ensure table cells have proper styling
     const cells = clone.querySelectorAll('th, td');
     cells.forEach(cell => {
       cell.style.border = '1px solid #dee2e6';
@@ -168,7 +175,6 @@ function downloadPDF(coinName, timestamp) {
       cell.style.textAlign = 'left';
     });
 
-    // Ensure all elements are visible
     const allElements = clone.querySelectorAll('*');
     allElements.forEach(el => {
       el.style.display = 'block';
@@ -176,7 +182,6 @@ function downloadPDF(coinName, timestamp) {
       el.style.opacity = '1';
     });
 
-    // Add CSS to enforce table styling
     const style = document.createElement('style');
     style.innerHTML = `
       table {
@@ -219,7 +224,6 @@ function downloadPDF(coinName, timestamp) {
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    // Ensure footer appears on every page
     html2pdf().from(clone).set(opt).toPdf().get('pdf').then(pdf => {
       const totalPages = pdf.internal.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
@@ -233,7 +237,7 @@ function downloadPDF(coinName, timestamp) {
       showToast('Failed to generate PDF. Please try again.');
     });
     showToast('PDF download started.');
-  }, 100); // 100ms delay to ensure DOM rendering
+  }, 100);
 }
 
 // Call loadApiKey when the page loads
@@ -269,6 +273,7 @@ if (searchBtn) {
         auditLink: encodeURIComponent(auditLink),
         bypassCache: 'true',
       });
+      console.log('Fetching coin data for:', validId, 'with params:', queryParams.toString());
       const response = await fetch(
         `/api/fetchCoinData/${validId}?${queryParams}`,
         {
@@ -284,7 +289,6 @@ if (searchBtn) {
       }
       coinDetails.innerHTML = result.html;
 
-      // Add download button
       console.log('Appending download button');
       const downloadBtn = document.createElement('button');
       downloadBtn.className = 'download-btn btn';
@@ -298,7 +302,9 @@ if (searchBtn) {
       let errorMessage = error.message;
       if (errorMessage.includes('No data found')) {
         errorMessage = `No data found for "${searchTerm}". Try a different coin name or ID (e.g., "baby-doge-coin" for BabyDoge) or check API availability.`;
-      } else if (errorMessage.includes('Server error: 500')) {
+      } else if (errorMessage.includes('Server error: 404')) {
+        errorMessage = `Server endpoint not found for "${searchTerm}". Please ensure the /api/fetchCoinData endpoint is deployed correctly on Netlify Functions.`;
+      } else if (errorMessage.includes('Server error')) {
         errorMessage = `Server error while fetching data for "${searchTerm}". Please try again later or contact support.`;
       }
       coinDetails.innerHTML = `<p class="text-danger"><i class="bi bi-exclamation-circle me-2"></i>${errorMessage}</p>`;
@@ -314,3 +320,303 @@ if (searchBtn) {
 // Initialize tooltips
 const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
 tooltipTriggerList.forEach((tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl));
+
+// Fetch news (global scope for ticker and news page)
+async function fetchNews() {
+  const newsContainer = document.getElementById('news-container');
+  if (newsContainer) {
+    newsContainer.innerHTML = '<p>Loading news...</p>';
+  }
+  let articles = [];
+
+  try {
+    const cgResponse = await fetch('https://api.coingecko.com/api/v3/news');
+    const cgData = await cgResponse.json();
+    articles = articles.concat(cgData.data.map(article => ({
+      title: article.title,
+      description: article.description || '',
+      url: article.url,
+      source: article.source || 'CoinGecko',
+      date: new Date(article.date || Date.now()),
+      image: article.thumb || null
+    })));
+  } catch (error) {
+    console.error('CoinGecko API error:', error);
+  }
+
+  try {
+    const cnResponse = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://crypto.news/feed/');
+    const cnData = await cnResponse.json();
+    articles = articles.concat(cnData.items.map(item => ({
+      title: item.title,
+      description: item.description.replace(/<[^>]+>/g, '').slice(0, 100) + '...',
+      url: item.link,
+      source: 'Crypto.News',
+      date: new Date(item.pubDate || Date.now()),
+      image: item.thumbnail || null
+    })));
+  } catch (error) {
+    console.error('Crypto.News API error:', error);
+  }
+
+  // Remove date filter to ensure articles are available
+  articles = articles
+    .sort((a, b) => b.date - a.date)
+    .slice(0, 15);
+
+  if (newsContainer) {
+    newsContainer.innerHTML = '';
+    if (articles.length === 0) {
+      newsContainer.innerHTML = '<p class="text-muted">No news available.</p>';
+    } else {
+      articles.forEach(article => {
+        const slug = article.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const shareUrl = `https://rugbuster.netlify.app/news.html?article=${encodeURIComponent(slug)}`;
+        const card = document.createElement('div');
+        card.className = 'col';
+        card.innerHTML = `
+          <div class="card h-100">
+            ${article.image ? `<img src="${article.image}" class="card-img-top" alt="${article.title}" style="max-height: 200px; object-fit: cover;">` : ''}
+            <div class="card-body">
+              <h5 class="card-title">${article.title}</h5>
+              <p class="card-text">${article.description}</p>
+              <p class="text-muted">Source: ${article.source} | ${article.date.toLocaleDateString()}</p>
+              <div class="share-buttons mt-2">
+                <a href="https://wa.me/?text=${encodeURIComponent(article.title + ' ' + shareUrl)}" target="_blank" class="btn btn-sm btn-outline-success me-1" title="Share on WhatsApp"><i class="bi bi-whatsapp"></i></a>
+                <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(shareUrl)}" target="_blank" class="btn btn-sm btn-outline-primary me-1" title="Share on X"><i class="bi bi-twitter"></i></a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}" target="_blank" class="btn btn-sm btn-outline-primary me-1" title="Share on Facebook"><i class="bi bi-facebook"></i></a>
+                <button class="btn btn-sm btn-outline-secondary copy-link" data-link="${shareUrl}" title="Copy Link"><i class="bi bi-clipboard"></i></button>
+              </div>
+              <a href="${article.url}" target="_blank" class="btn btn-outline-primary mt-2">Read More</a>
+            </div>
+          </div>
+        `;
+        newsContainer.appendChild(card);
+      });
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const articleSlug = urlParams.get('article');
+      if (articleSlug) {
+        const targetCard = Array.from(newsContainer.querySelectorAll('.card')).find(card => 
+          card.querySelector('.card-title').textContent.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') === articleSlug
+        );
+        if (targetCard) {
+          targetCard.scrollIntoView({ behavior: 'smooth' });
+          targetCard.classList.add('highlight');
+        }
+      }
+    }
+  }
+  console.log('Fetched articles:', articles);
+  return articles;
+}
+
+// News ticker on homepage
+if (window.location.pathname === '/' || window.location.pathname.includes('index.html')) {
+  async function loadTicker() {
+    const tickerContent = document.getElementById('ticker-content');
+    if (!tickerContent) {
+      console.warn('ticker-content not found');
+      return;
+    }
+    async function updateTicker() {
+      try {
+        const articles = await fetchNews();
+        console.log('Ticker articles:', articles);
+        const latestFive = articles.slice(0, 5);
+        if (latestFive.length === 0) {
+          tickerContent.innerHTML = '<span class="text-muted">No news available at this time.</span>';
+          console.warn('No articles for ticker');
+          return;
+        }
+        tickerContent.innerHTML = latestFive.map(article => {
+          const slug = article.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+          return `<a href="/news.html?article=${encodeURIComponent(slug)}" class="ticker-item">${article.title} (${article.source})</a>`;
+        }).join('');
+      } catch (error) {
+        console.error('Ticker loading error:', error);
+        tickerContent.innerHTML = '<span class="text-muted">Unable to load news ticker.</span>';
+      }
+    }
+    // Initial load
+    updateTicker();
+    // Auto-update every 5 minutes (300,000 ms)
+    setInterval(updateTicker, 300000);
+  }
+  loadTicker();
+}
+
+// Crypto News Section
+if (window.location.pathname.includes('news.html')) {
+  fetchNews().catch(err => {
+    console.error('News section error:', err);
+    const newsContainer = document.getElementById('news-container');
+    if (newsContainer) {
+      newsContainer.innerHTML = '<p class="text-danger">Failed to load news. Please try again later.</p>';
+    }
+  });
+}
+
+// Blog section
+document.addEventListener('DOMContentLoaded', () => {
+  const normalizedPath = window.location.pathname.toLowerCase().replace(/\/$/, '');
+  console.log('Checking blog section for path:', normalizedPath);
+  if (normalizedPath.includes('blog') || normalizedPath === '/blog.html') {
+    console.log('Blog section triggered');
+    async function loadBlogPosts() {
+      const blogContainer = document.getElementById('blog-container');
+      const blogSearch = document.getElementById('blogSearch');
+      const searchBlogBtn = document.getElementById('searchBlogBtn');
+      const categoryFilter = document.getElementById('categoryFilter');
+      console.log('Blog section loaded:', { blogContainer, blogSearch, searchBlogBtn, categoryFilter });
+
+      if (!blogContainer) {
+        console.error('blog-container not found');
+        showToast('Blog container not found. Please check the page structure.');
+        return;
+      }
+
+      const posts = [
+        {
+          title: 'How to Spot a Rug Pull',
+          excerpt: 'Learn the red flags of crypto scams, like high holder concentration and unlocked liquidity.',
+          date: '2025-05-15',
+          slug: 'how-to-spot-a-rug-pull',
+          image: null,
+          category: 'Education',
+          tags: ['rug pulls', 'crypto scams', 'security'],
+          author: 'Micheal Ohagwam',
+          draft: false
+        },
+        {
+          title: 'Why RugBuster Uses CoinGecko',
+          excerpt: 'Discover how trusted APIs power our real-time token analysis.',
+          date: '2025-05-10',
+          slug: 'why-rugbuster-uses-coingecko',
+          image: null,
+          category: 'Tutorials',
+          tags: ['CoinGecko', 'data', 'analysis'],
+          author: 'Micheal Ohagwam',
+          draft: false
+        }
+      ];
+
+      const categories = [...new Set(posts.map(post => post.category))];
+
+      if (categoryFilter) {
+        categoryFilter.innerHTML = '<option value="">All Categories</option>' + 
+          categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+      } else {
+        console.warn('categoryFilter not found');
+      }
+
+      function displayPosts(filteredPosts) {
+        console.log('Displaying posts:', filteredPosts);
+        blogContainer.innerHTML = '';
+        if (filteredPosts.length === 0) {
+          blogContainer.innerHTML = '<p class="text-muted">No posts found.</p>';
+          return;
+        }
+        filteredPosts.forEach(post => {
+          if (post.draft) return;
+          const shareUrl = `https://rugbuster.netlify.app/blog/${post.slug}.html`;
+          const card = document.createElement('div');
+          card.className = 'col';
+          card.innerHTML = `
+            <div class="card h-100">
+              ${post.image ? `<img src="${post.image}" class="card-img-top" alt="${post.title}" style="max-height: 200px; object-fit: cover;">` : ''}
+              <div class="card-body">
+                <h5 class="card-title">${post.title}</h5>
+                <p class="card-text">${post.excerpt}</p>
+                <p class="text-muted">By ${post.author} | ${new Date(post.date).toLocaleDateString()} | Category: ${post.category} | Tags: ${post.tags.join(', ')}</p>
+                <div class="share-buttons mt-2">
+                  <a href="https://wa.me/?text=${encodeURIComponent(post.title + ' ' + shareUrl)}" target="_blank" class="btn btn-sm btn-outline-success me-1" title="Share on WhatsApp" aria-label="Share ${post.title} on WhatsApp"><i class="bi bi-whatsapp"></i></a>
+                  <a href="https://x.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(shareUrl)}" target="_blank" class="btn btn-sm btn-outline-primary me-1" title="Share on X" aria-label="Share ${post.title} on X"><i class="bi bi-twitter-x"></i></a>
+                  <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}" target="_blank" class="btn btn-sm btn-outline-primary me-1" title="Share on Facebook" aria-label="Share ${post.title} on Facebook"><i class="bi bi-facebook"></i></a>
+                  <button class="btn btn-sm btn-outline-secondary copy-link" data-link="${shareUrl}" title="Copy Link" aria-label="Copy link to ${post.title}"><i class="bi bi-clipboard"></i></button>
+                </div>
+                <a href="/blog/${post.slug}.html" class="btn btn-outline-primary mt-2" aria-label="Read more about ${post.title}">Read More</a>
+              </div>
+            </div>
+          `;
+          blogContainer.appendChild(card);
+        });
+      }
+
+      displayPosts(posts);
+
+      function filterPosts() {
+        const searchTerm = blogSearch ? blogSearch.value.trim().toLowerCase() : '';
+        const category = categoryFilter ? categoryFilter.value : '';
+        const filteredPosts = posts.filter(post => {
+          if (post.draft) return false;
+          const matchesSearch = searchTerm === '' || 
+            post.title.toLowerCase().includes(searchTerm) || 
+            post.excerpt.toLowerCase().includes(searchTerm) || 
+            post.tags.some(tag => tag.toLowerCase().includes(searchTerm)) ||
+            post.author.toLowerCase().includes(searchTerm);
+          const matchesCategory = category === '' || post.category === category;
+          return matchesSearch && matchesCategory;
+        });
+        displayPosts(filteredPosts);
+      }
+
+      let debounceTimeout;
+      function debounceSearch() {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(filterPosts, 300);
+      }
+
+      if (blogSearch) {
+        blogSearch.addEventListener('input', debounceSearch);
+        blogSearch.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            filterPosts();
+          }
+        });
+      } else {
+        console.warn('blogSearch not found');
+      }
+
+      if (searchBlogBtn) {
+        searchBlogBtn.addEventListener('click', filterPosts);
+      } else {
+        console.warn('searchBlogBtn not found');
+      }
+
+      if (categoryFilter) {
+        categoryFilter.addEventListener('change', filterPosts);
+      } else {
+        console.warn('categoryFilter not found');
+      }
+    }
+    loadBlogPosts().catch(err => {
+      console.error('Blog loading error:', err);
+      showToast('Failed to load blog posts. Please try again.');
+    });
+  }
+});
+
+// Copy Link Handler
+document.addEventListener('click', (event) => {
+  if (event.target.closest('.copy-link')) {
+    const button = event.target.closest('.copy-link');
+    const link = button.dataset.link;
+    navigator.clipboard.writeText(link).then(() => {
+      showToast('Link copied to clipboard!');
+      button.innerHTML = '<i class="bi bi-clipboard-check"></i>';
+      setTimeout(() => {
+        button.innerHTML = '<i class="bi bi-clipboard"></i>';
+      }, 2000);
+    }).catch(() => {
+      showToast('Failed to copy link.');
+    });
+  }
+});
+
+// Global error handler
+window.onerror = function (message, source, lineno, colno, error) {
+  console.error(`Global error: ${message} at ${source}:${lineno}:${colno}`, error);
+  showToast('An error occurred. Please try refreshing the page.');
+};

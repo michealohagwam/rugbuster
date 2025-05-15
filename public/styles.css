@@ -7,12 +7,13 @@
   --header-color: #1a3c6d;
   --muted-color: #6c757d;
   --table-bg: #f8f9fa;
-  --table-border: #ddd;
+  --table-border: #dee2e6;
   --btn-primary-bg: #007bff;
   --btn-primary-hover: #0056b3;
   --danger-color: #dc3545;
   --warning-color: #ffc107;
   --success-color: #28a745;
+  --focus-outline: #80bdff;
 }
 
 [data-theme="dark"] {
@@ -30,6 +31,7 @@
   --danger-color: #ff6b6b;
   --warning-color: #ffd700;
   --success-color: #32cd32;
+  --focus-outline: #4dabf7;
 }
 
 body {
@@ -38,6 +40,7 @@ body {
   color: var(--text-color);
   margin: 0;
   padding: 0;
+  min-height: 100vh;
 }
 
 .container {
@@ -76,6 +79,7 @@ body {
   color: var(--text-color);
   font-size: 1rem;
   padding: 0.5rem 1rem;
+  transition: color 0.3s;
 }
 
 .navbar-light .navbar-nav .nav-link:hover,
@@ -132,8 +136,8 @@ body {
 }
 
 [data-theme="dark"] .testimonials-card .card .card-body .text-muted {
-  color: var(--text-color) !important;
-  opacity: 1;
+  color: var(--muted-color);
+  opacity: 0.9;
 }
 
 .search-card .input-group {
@@ -147,6 +151,11 @@ body {
   font-size: 1rem;
   background: var(--card-bg);
   color: var(--text-color);
+}
+
+.search-card .form-control:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-outline);
 }
 
 .search-card .form-control::placeholder {
@@ -249,7 +258,8 @@ body {
   border-radius: 10px;
   transition: background-color 0.3s;
   margin-top: 1rem;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   color: #fff;
 }
 
@@ -324,10 +334,12 @@ body {
 
 footer {
   background-color: var(--card-bg);
+  padding: 1rem 0;
 }
 
 footer p {
   color: var(--muted-color);
+  margin: 0;
 }
 
 [data-theme="dark"] footer p {
@@ -335,12 +347,160 @@ footer p {
   opacity: 0.9;
 }
 
-/* Ensure PDF content is styled */
+/* PDF content */
 .pdf-content {
-  background: var(--card-bg);
-  color: var(--text-color);
+  background: #fff;
+  color: #000;
   font-family: 'Inter', sans-serif;
   padding: 20px;
+  box-sizing: border-box;
+}
+
+/* News and Blog Cards */
+.card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--card-shadow);
+}
+
+.row-cols-1 .card {
+  margin-bottom: 1rem;
+}
+
+.share-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.share-buttons .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+.share-buttons .btn i {
+  font-size: 1rem;
+}
+
+.card.highlight {
+  border: 2px solid var(--btn-primary-bg);
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+}
+
+[data-theme="dark"] .card.highlight {
+  border-color: var(--btn-primary-hover);
+  box-shadow: 0 0 10px rgba(30, 144, 255, 0.5);
+}
+
+/* News Ticker */
+.news-ticker {
+  width: 100%;
+  overflow: hidden;
+  background-color: #f8f9fa;
+  padding: 10px 0;
+  white-space: nowrap;
+  box-sizing: border-box;
+  border-top: 1px solid #dee2e6;
+  border-bottom: 1px solid #dee2e6;
+  position: relative;
+  z-index: 1000;
+}
+
+.ticker-content {
+  display: inline-block;
+  white-space: nowrap;
+  animation: ticker-scroll 60s linear infinite;
+}
+
+.ticker-content:hover {
+  animation-play-state: paused;
+}
+
+.ticker-item {
+  display: inline-block;
+  margin-right: 30px;
+  color: var(--btn-primary-bg);
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.ticker-item:hover {
+  text-decoration: underline;
+  color: var(--btn-primary-hover);
+}
+
+[data-theme="dark"] .news-ticker {
+  background-color: var(--table-bg);
+  border-color: var(--table-border);
+}
+
+[data-theme="dark"] .ticker-item {
+  color: var(--btn-primary-bg);
+}
+
+@keyframes ticker-scroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Theme Toggle */
+#themeToggle {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 1050;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background-color: var(--btn-primary-bg);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#themeToggle i {
+  font-size: 1rem;
+  color: #fff;
+}
+
+/* Blog Filters */
+#blogSearch, #categoryFilter {
+  border: 1px solid var(--table-border);
+  border-radius: 5px;
+  padding: 0.5rem;
+  background: var(--card-bg);
+  color: var(--text-color);
+}
+
+#blogSearch:focus, #categoryFilter:focus {
+  outline: none;
+  border-color: var(--btn-primary-bg);
+  box-shadow: 0 0 0 3px var(--focus-outline);
+}
+
+[data-theme="dark"] #blogSearch, [data-theme="dark"] #categoryFilter {
+  background: var(--table-bg);
+}
+
+/* Accessibility */
+:focus {
+  outline: 3px solid var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
 /* Mobile Responsiveness */
@@ -348,15 +508,19 @@ footer p {
   .container {
     padding: 1rem 0.5rem;
   }
+
   .header h1 {
     font-size: 1.8rem;
   }
+
   .header p {
     font-size: 0.9rem;
   }
+
   .navbar-nav {
     text-align: center;
   }
+
   .search-card,
   .results-card,
   .sponsored-card,
@@ -369,19 +533,23 @@ footer p {
     padding: 1rem;
     margin-bottom: 1.5rem;
   }
+
   .search-card .form-control {
     font-size: 0.9rem;
     padding: 0.5rem;
   }
+
   .search-card .btn-primary {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
   }
+
   .spinner-circle {
     width: 30px;
     height: 30px;
     border-width: 3px;
   }
+
   .results-card h2,
   .sponsored-card h3,
   .testimonials-card h3,
@@ -392,21 +560,26 @@ footer p {
   .tools-section h3 {
     font-size: 1.4rem;
   }
+
   .results-card .table {
     font-size: 0.8rem;
   }
+
   .results-card .table th,
   .results-card .table td {
     padding: 0.5rem;
   }
+
   .results-card .table .section-header {
     font-size: 0.9rem;
     padding: 0.3rem 0.5rem;
   }
+
   .results-card .download-btn {
     padding: 0.4rem 0.8rem;
     font-size: 0.9rem;
   }
+
   .donate-section .btn,
   .premium-section .btn,
   .consulting-section .btn,
@@ -415,13 +588,17 @@ footer p {
     font-size: 0.9rem;
     padding: 0.5rem 1rem;
   }
+
   .donation-bar {
     font-size: 0.8rem;
   }
+
   .donation-bar span {
     padding: 0.3rem 0.5rem;
   }
+
   #themeToggle {
+    position: fixed;
     top: 15px;
     left: 50%;
     transform: translateX(-50%);
@@ -436,7 +613,23 @@ footer p {
     justify-content: center;
     align-items: center;
   }
+
   #themeToggle i {
     font-size: 1rem;
   }
+}
+
+[data-theme="light"] {
+  background-color: #fff;
+  color: #000;
+}
+[data-theme="dark"] {
+  background-color: #343a40;
+  color: #fff;
+}
+[data-theme="dark"] .card,
+[data-theme="dark"] .navbar,
+[data-theme="dark"] footer {
+  background-color: #495057;
+  color: #fff;
 }
