@@ -445,6 +445,14 @@ footer p {
   100% { transform: translateX(-100%); }
 }
 
+.news-ticker:empty::before,
+.ticker-content:empty::before {
+  content: 'Loading news...';
+  color: var(--muted-color);
+  font-size: 1rem;
+  display: inline-block;
+}
+
 /* Theme Toggle */
 #themeToggle {
   position: fixed;

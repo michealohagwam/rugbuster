@@ -25,7 +25,7 @@ function showToast(message) {
 }
 
 // Fetch the API key from the server
-let API_KEY = 'rugbuster-secret-123'; // Default fallback
+let API_KEY = 'rugbuster-secret-123'; // Default fallback for internal API
 async function loadApiKey() {
   try {
     const response = await fetch('/api/config');
@@ -325,50 +325,142 @@ tooltipTriggerList.forEach((tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTr
 async function fetchNews() {
   const newsContainer = document.getElementById('news-container');
   if (newsContainer) {
+    console.log('news-container found, setting loading state');
     newsContainer.innerHTML = '<p>Loading news...</p>';
+  } else if (window.location.pathname.includes('news.html')) {
+    console.warn('news-container not found on news.html');
   }
+
   let articles = [];
+  const seenUrls = new Set(); // Track unique article URLs
 
-  try {
-    const cgResponse = await fetch('https://api.coingecko.com/api/v3/news');
-    const cgData = await cgResponse.json();
-    articles = articles.concat(cgData.data.map(article => ({
-      title: article.title,
-      description: article.description || '',
-      url: article.url,
-      source: article.source || 'CoinGecko',
-      date: new Date(article.date || Date.now()),
-      image: article.thumb || null
-    })));
-  } catch (error) {
-    console.error('CoinGecko API error:', error);
+  // Check cache first
+  const cached = localStorage.getItem('newsCache');
+  const cacheTime = localStorage.getItem('newsCacheTime');
+  if (cached && cacheTime && Date.now() - cacheTime < 3600000) { // 1-hour cache
+    try {
+      articles = JSON.parse(cached);
+      console.log('Loaded cached articles:', articles.length);
+      articles = articles.map(article => ({
+        ...article,
+        date: new Date(article.date || Date.now())
+      })).filter(article => {
+        if (!isNaN(article.date.getTime()) && article.url && !seenUrls.has(article.url)) {
+          seenUrls.add(article.url);
+          return true;
+        }
+        console.log('Filtered duplicate or invalid cached article:', article.url || article.title);
+        return false;
+      });
+    } catch (e) {
+      console.error('Cache parse error:', e);
+    }
   }
 
+  // Fetch from Netlify Function
   try {
-    const cnResponse = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://crypto.news/feed/');
-    const cnData = await cnResponse.json();
-    articles = articles.concat(cnData.items.map(item => ({
-      title: item.title,
-      description: item.description.replace(/<[^>]+>/g, '').slice(0, 100) + '...',
-      url: item.link,
-      source: 'Crypto.News',
-      date: new Date(item.pubDate || Date.now()),
-      image: item.thumbnail || null
-    })));
+    const response = await fetch('/.netlify/functions/fetchNews');
+    if (!response.ok) {
+      throw new Error(`Netlify Function error: HTTP ${response.status}`);
+    }
+    const { coingecko, cryptonews } = await response.json();
+    console.log('Fetched news data:', { coingecko: coingecko?.length, cryptonews: cryptonews?.length });
+
+    // Process CoinGecko articles
+    if (coingecko && Array.isArray(coingecko)) {
+      const cgArticles = coingecko.map(article => ({
+        title: article.title || 'Untitled',
+        description: article.description || 'No description available',
+        url: article.url || '#',
+        source: article.source || 'CoinGecko',
+        date: article.date ? new Date(article.date) : new Date(),
+        image: article.thumb || null
+      })).filter(article => {
+        if (article.url && !seenUrls.has(article.url)) {
+          seenUrls.add(article.url);
+          return true;
+        }
+        console.log('Filtered duplicate CoinGecko article:', article.url || article.title);
+        return false;
+      });
+      articles = articles.concat(cgArticles);
+    }
+
+    // Process Crypto.News articles
+    if (cryptonews && Array.isArray(cryptonews)) {
+      const cnArticles = cryptonews.map(item => ({
+        title: item.title || 'Untitled',
+        description: item.description ? item.description.replace(/<[^>]+>/g, '').slice(0, 100) + '...' : 'No description available',
+        url: item.link || '#',
+        source: 'Crypto.News',
+        date: item.pubDate ? new Date(item.pubDate) : new Date(),
+        image: item.thumbnail || null
+      })).filter(article => {
+        if (article.url && !seenUrls.has(article.url)) {
+          seenUrls.add(article.url);
+          return true;
+        }
+        console.log('Filtered duplicate Crypto.News article:', article.url || article.title);
+        return false;
+      });
+      articles = articles.concat(cnArticles);
+    }
   } catch (error) {
-    console.error('Crypto.News API error:', error);
+    console.error('Fetch news error:', error);
+    showToast('Failed to fetch news. Using cached or fallback content.');
   }
 
-  // Remove date filter to ensure articles are available
+  // Fallback mock articles if none retrieved
+  if (articles.length === 0) {
+    console.warn('No articles retrieved, using mock data');
+    articles = [
+      {
+        title: 'Crypto Market Update',
+        description: 'Latest trends in the crypto market.',
+        url: '#crypto-market-update',
+        source: 'RugBuster',
+        date: new Date(),
+        image: null
+      },
+      {
+        title: 'Beware of Rug Pulls',
+        description: 'Tips to avoid crypto scams.',
+        url: '#beware-rug-pulls',
+        source: 'RugBuster',
+        date: new Date(),
+        image: null
+      }
+    ].filter(article => {
+      if (!seenUrls.has(article.url)) {
+        seenUrls.add(article.url);
+        return true;
+      }
+      return false;
+    });
+  }
+
+  // Filter and sort articles
   articles = articles
+    .filter(article => article.title && article.url && !isNaN(article.date.getTime()))
     .sort((a, b) => b.date - a.date)
     .slice(0, 15);
+
+  // Cache articles
+  try {
+    localStorage.setItem('newsCache', JSON.stringify(articles));
+    localStorage.setItem('newsCacheTime', Date.now());
+    console.log('Cached articles:', articles.length);
+  } catch (e) {
+    console.error('Cache save error:', e);
+  }
 
   if (newsContainer) {
     newsContainer.innerHTML = '';
     if (articles.length === 0) {
-      newsContainer.innerHTML = '<p class="text-muted">No news available.</p>';
+      console.warn('No valid articles after filtering');
+      newsContainer.innerHTML = '<p class="text-muted">No news available. Please try again later.</p>';
     } else {
+      console.log('Rendering articles:', articles.length);
       articles.forEach(article => {
         const slug = article.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         const shareUrl = `https://rugbuster.netlify.app/news.html?article=${encodeURIComponent(slug)}`;
@@ -401,13 +493,16 @@ async function fetchNews() {
           card.querySelector('.card-title').textContent.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') === articleSlug
         );
         if (targetCard) {
+          console.log('Highlighting article:', articleSlug);
           targetCard.scrollIntoView({ behavior: 'smooth' });
           targetCard.classList.add('highlight');
+        } else {
+          console.warn('Article not found for slug:', articleSlug);
         }
       }
     }
   }
-  console.log('Fetched articles:', articles);
+  console.log('Returning articles:', articles.length);
   return articles;
 }
 
@@ -419,14 +514,16 @@ if (window.location.pathname === '/' || window.location.pathname.includes('index
       console.warn('ticker-content not found');
       return;
     }
+    console.log('ticker-content found, setting loading state');
+    tickerContent.innerHTML = '<span class="text-muted">Loading news...</span>';
     async function updateTicker() {
       try {
         const articles = await fetchNews();
-        console.log('Ticker articles:', articles);
+        console.log('Ticker articles:', articles.length);
         const latestFive = articles.slice(0, 5);
         if (latestFive.length === 0) {
-          tickerContent.innerHTML = '<span class="text-muted">No news available at this time.</span>';
           console.warn('No articles for ticker');
+          tickerContent.innerHTML = '<span class="text-muted">No news available at this time.</span>';
           return;
         }
         tickerContent.innerHTML = latestFive.map(article => {
@@ -438,24 +535,27 @@ if (window.location.pathname === '/' || window.location.pathname.includes('index
         tickerContent.innerHTML = '<span class="text-muted">Unable to load news ticker.</span>';
       }
     }
-    // Initial load
     updateTicker();
-    // Auto-update every 5 minutes (300,000 ms)
     setInterval(updateTicker, 300000);
   }
-  loadTicker();
+  document.addEventListener('DOMContentLoaded', loadTicker);
 }
 
 // Crypto News Section
-if (window.location.pathname.includes('news.html')) {
-  fetchNews().catch(err => {
-    console.error('News section error:', err);
-    const newsContainer = document.getElementById('news-container');
-    if (newsContainer) {
-      newsContainer.innerHTML = '<p class="text-danger">Failed to load news. Please try again later.</p>';
-    }
-  });
-}
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.location.pathname.includes('news.html')) {
+    console.log('Initializing news section on news.html');
+    fetchNews().catch(err => {
+      console.error('News section error:', err);
+      const newsContainer = document.getElementById('news-container');
+      if (newsContainer) {
+        newsContainer.innerHTML = '<p class="text-danger">Failed to load news. Please try again later.</p>';
+      } else {
+        console.error('news-container not found on news.html');
+      }
+    });
+  }
+});
 
 // Blog section
 document.addEventListener('DOMContentLoaded', () => {
