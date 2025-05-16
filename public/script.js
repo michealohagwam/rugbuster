@@ -81,10 +81,8 @@ if (themeToggle) {
       themeIcon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
     }
     localStorage.setItem('theme', theme);
-    // Explicitly apply styles to ensure visibility
     document.body.style.backgroundColor = theme === 'dark' ? '#343a40' : '#fff';
     document.body.style.color = theme === 'dark' ? '#fff' : '#000';
-    // Apply to blog-specific elements
     const cards = document.querySelectorAll('.card');
     cards.forEach(card => {
       card.style.backgroundColor = theme === 'dark' ? '#495057' : '#fff';
@@ -324,20 +322,22 @@ tooltipTriggerList.forEach((tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTr
 // Fetch news (global scope for ticker and news page)
 async function fetchNews() {
   const newsContainer = document.getElementById('news-container');
-  if (newsContainer) {
-    console.log('news-container found, setting loading state');
-    newsContainer.innerHTML = '<p>Loading news...</p>';
+  const newsLoader = document.getElementById('news-loader');
+  if (newsContainer && newsLoader) {
+    console.log('news-container and news-loader found, showing loader');
+    newsLoader.style.display = 'flex';
+    newsContainer.innerHTML = '';
   } else if (window.location.pathname.includes('news.html')) {
-    console.warn('news-container not found on news.html');
+    console.warn('news-container or news-loader not found on news.html');
   }
 
   let articles = [];
-  const seenUrls = new Set(); // Track unique article URLs
+  const seenUrls = new Set();
 
   // Check cache first
   const cached = localStorage.getItem('newsCache');
   const cacheTime = localStorage.getItem('newsCacheTime');
-  if (cached && cacheTime && Date.now() - cacheTime < 3600000) { // 1-hour cache
+  if (cached && cacheTime && Date.now() - cacheTime < 3600000) {
     try {
       articles = JSON.parse(cached);
       console.log('Loaded cached articles:', articles.length);
@@ -366,7 +366,6 @@ async function fetchNews() {
     const { coingecko, cryptonews } = await response.json();
     console.log('Fetched news data:', { coingecko: coingecko?.length, cryptonews: cryptonews?.length });
 
-    // Process CoinGecko articles
     if (coingecko && Array.isArray(coingecko)) {
       const cgArticles = coingecko.map(article => ({
         title: article.title || 'Untitled',
@@ -386,7 +385,6 @@ async function fetchNews() {
       articles = articles.concat(cgArticles);
     }
 
-    // Process Crypto.News articles
     if (cryptonews && Array.isArray(cryptonews)) {
       const cnArticles = cryptonews.map(item => ({
         title: item.title || 'Untitled',
@@ -454,11 +452,12 @@ async function fetchNews() {
     console.error('Cache save error:', e);
   }
 
-  if (newsContainer) {
+  if (newsContainer && newsLoader) {
+    newsLoader.style.display = 'none';
     newsContainer.innerHTML = '';
     if (articles.length === 0) {
       console.warn('No valid articles after filtering');
-      newsContainer.innerHTML = '<p class="text-muted">No news available. Please try again later.</p>';
+      newsContainer.innerHTML = '<p class="text-danger">Unable to Retrieve Latest Crypto News At The Moment, Please Retry 😢</p>';
     } else {
       console.log('Rendering articles:', articles.length);
       articles.forEach(article => {
@@ -548,10 +547,12 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchNews().catch(err => {
       console.error('News section error:', err);
       const newsContainer = document.getElementById('news-container');
-      if (newsContainer) {
-        newsContainer.innerHTML = '<p class="text-danger">Failed to load news. Please try again later.</p>';
+      const newsLoader = document.getElementById('news-loader');
+      if (newsContainer && newsLoader) {
+        newsLoader.style.display = 'none';
+        newsContainer.innerHTML = '<p class="text-danger">Unable to Retrieve Latest Crypto News At The Moment, Please Retry 😢</p>';
       } else {
-        console.error('news-container not found on news.html');
+        console.error('news-container or news-loader not found on news.html');
       }
     });
   }
